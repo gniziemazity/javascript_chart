@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Custom Chart</title>
+      <link rel="stylesheet" href="style.css"/>
+   </head>
+   <body>
+      <h1>Custom Chart</h1>
+      <div id="chartContainer"></div>
+      <table id="dataTable"></table>
+      <script src="./graphics.js"></script>
+      <script src="./math.js"></script>
+      <script src="./chart.js"></script>
+      <script>
+
+         const N=1000;
+         const samples=[];
+         for(let i=1;i<=N;i++){
+            const type=Math.random()<0.5?"basic":"sport";
+            const km=math.lerp(3000,300000,Math.random());
+            const price=math.remap(3000,300000,9000,900,km)+
+               math.lerp(-2000,2000,Math.random())+
+               (type=="basic"?0:5000);
+
+            samples.push({
+               id:i,
+               label:type,
+               point:[km,price]
+            });
+         }
+
+         const options={
+            size:600,
+            axesLabels:["Kilometers","Price"],
+            styles:{
+               basic:{color:'blue',text:'🚗'},
+               sport:{color:'gray',text:'🏎️'}
+            },
+            icon:"image",
+            transparency:0.4
+         };
+         graphics.generateImages(options.styles);
+
+         let chart;
+         setTimeout(()=>{
+            chart=new Chart(
+               chartContainer,
+               samples,
+               options,
+               handleClick
+            );
+         },100);
+         
+         const header=dataTable.createTHead();
+         const tr=header.insertRow();
+         tr.insertCell().innerHTML="Id";
+         tr.insertCell().innerHTML="Type";
+         tr.insertCell().innerHTML="Km";
+         tr.insertCell().innerHTML="Price";
+
+         const body=dataTable.createTBody();
+         for(const sample of samples){
+            const tr=body.insertRow();
+            tr.id="sample_"+sample.id;
+            tr.onclick=()=>handleClick(sample,false);
+            tr.insertCell().innerHTML=sample.id;
+            tr.insertCell().innerHTML=sample.label;
+            tr.insertCell().innerHTML=
+               math.formatNumber(sample.point[0]);
+            tr.insertCell().innerHTML=
+               math.formatNumber(sample.point[1]);
+         }
+
+         function handleClick(sample,doScroll=true){
+            if(sample==null){
+               [...document.querySelectorAll('.emphasize')].
+                  forEach((e)=>e.classList.remove('emphasize'));
+               return;
+            }
+            const el=document.getElementById(
+               "sample_"+sample.id
+            );
+            if(el.classList.contains("emphasize")){
+               el.classList.remove("emphasize");
+               chart.selectSample(null);
+               return;
+            }
+            [...document.querySelectorAll('.emphasize')].
+               forEach((e)=>e.classList.remove('emphasize'));
+            el.classList.add("emphasize");
+            if(doScroll){
+               el.scrollIntoView({  
+                  behavior:'auto',
+                  block:'center'
+               });
+            }
+            chart.selectSample(sample);
+         }
+
+      </script>
+   </body>
+</html>
